@@ -1,71 +1,111 @@
 import PropTypes from 'prop-types';
 import { createContext, useEffect, useState } from 'react';
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  getAuth,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  updateProfile
+} from 'firebase/auth';
+import { app } from '../firebase/firebase.config';
 import axios from 'axios';
+
 export const AuthContext = createContext(null);
+
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to handle user login
-  const signIn = async (email, password) => {
-    // Perform login logic
-    // For example, call your backend API to authenticate user
-    try {
-      // Call your backend API to authenticate user
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, {
-        email,
-        password,
-      });
-
-      // Set user data and token in local storage upon successful login
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('token', response.data.token);
-
-      // Set user state
-      setUser(response.data.user);
-    } catch (error) {
-      console.error('Error logging in:', error);
-    }
+  const createUser = (email, password) => {
+    setLoading(true);
+    return createUserWithEmailAndPassword(auth, email, password);
   };
 
-  // Function to handle user logout
-  const logOut = () => {
-    // Clear user data and token from local storage upon logout
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-
-    // Clear user state
-    setUser(null);
+  const signIn = (email, password) => {
+    setLoading(true);
+    return signInWithEmailAndPassword(auth, email, password);
   };
 
-  useEffect(() => {
-    // Check if user is already logged in (i.e., user data and token exist in local storage)
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+  const signInWithGoogle = () => {
+    setLoading(true);
+    return signInWithPopup(auth, googleProvider);
+  };
 
-    if (storedUser && storedToken) {
-      // Set user state if user is logged in
-      setUser(JSON.parse(storedUser));
-    }
+  const resetPassword = email => {
+    setLoading(true);
+    return sendPasswordResetEmail(auth, email);
+  };
 
-    // Set loading state to false
+  const logOut = async () => {
+    setLoading(true);
+    await axios.get(`${import.meta.env.VITE_API_URL}/logout`, {
+      withCredentials: true,
+    });
+    localStorage.removeItem('token'); // Remove token from local storage
+    await signOut(auth);
+    setUser(null); // Ensure user is set to null after logout
     setLoading(false);
+  };
+
+  const updateUserProfile = (name, photo) => {
+    return updateProfile(auth.currentUser, {
+      displayName: name,
+      photoURL: photo,
+    });
+  };
+
+  // Get token from server and store in local storage
+  const getToken = async email => {
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_API_URL}/jwt`,
+      { email },
+      { withCredentials: true }
+    );
+    localStorage.setItem('token', data.token); // Save token to local storage
+    return data;
+  };
+
+  // onAuthStateChange
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser);
+      if (currentUser) {
+        getToken(currentUser.email); // Get and store token when user is authenticated
+      }
+      setLoading(false);
+    });
+    return () => {
+      return unsubscribe();
+    };
   }, []);
 
   const authInfo = {
     user,
     loading,
+    setLoading,
+    createUser,
     signIn,
+    signInWithGoogle,
+    resetPassword,
     logOut,
+    updateUserProfile,
   };
 
-  return <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>
+  );
 };
 
 AuthProvider.propTypes = {
   // Array of children.
-  children: PropTypes.array,
+  children: PropTypes.node,
 };
 
 export default AuthProvider;

@@ -12,7 +12,7 @@ import logo from "../../../assets/images/logo.svg";
 
 const Navbar = () => {
   const { user, logOut } = useAuth();
-  console.log(user);
+ 
   const axiosSecure = useAxiosSecure();
   const [role, isLoading] = useRole();
   console.log(role);
@@ -23,6 +23,16 @@ const Navbar = () => {
   const closeModal = () => {
     setIsOpenModal(false);
   };
+
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      console.log('User logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -315,7 +325,7 @@ const Navbar = () => {
                     {user ? (
                       <>
                         <div
-                          onClick={logOut}
+                          onClick={handleLogout}
                           className="px-4 py-3 hover:bg-neutral-100 transition font-semibold cursor-pointer"
                         >
                           Logout
