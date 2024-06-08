@@ -344,6 +344,7 @@ app.get("/requests", verifyToken, async (req, res) => {
     // Create an asset
     app.post("/asset", async (req, res) => {
       const asset = req.body;
+    
       try {
         const result = await assetCollection.insertOne(asset);
         res.send(result);
@@ -459,7 +460,7 @@ app.put("/approveRequest/:id", async (req, res) => {
 
 
     // Create an employer
-    app.post("/employers", async (req, res) => {
+    app.post("/employee", async (req, res) => {
       const employer = req.body;
       try {
         const result = await employerCollection.insertOne(employer);
@@ -470,7 +471,7 @@ app.put("/approveRequest/:id", async (req, res) => {
     });
 
     // Get all employers
-    app.get("/employers", async (req, res) => {
+    app.get("/employees", async (req, res) => {
       try {
         const result = await employerCollection.find().toArray();
         res.send(result);
@@ -480,7 +481,7 @@ app.put("/approveRequest/:id", async (req, res) => {
     });
 
     // Delete an employer
-    app.delete("/employers/:id", async (req, res) => {
+    app.delete("/employee/:id", async (req, res) => {
       const id = req.params.id;
       try {
         const query = { _id: new ObjectId(id) };
@@ -492,7 +493,7 @@ app.put("/approveRequest/:id", async (req, res) => {
     });
 
     // Create a manager
-    app.post("/managers", async (req, res) => {
+    app.post("/manager", async (req, res) => {
       const manager = req.body;
       try {
         const result = await managerCollection.insertOne(manager);

@@ -182,6 +182,18 @@ const Navbar = () => {
                         >
                           <span>Request Assets</span>
                         </NavLink>
+                        <NavLink
+                          to="/profile"
+                          className={({ isActive, isPending }) =>
+                            isPending
+                              ? "pending"
+                              : isActive
+                              ? "text-[#35A6DE] border-2 px-4 py-2 rounded-lg border-[#35A6DE]"
+                              : "hover:text-[#2b8cb7]"
+                          }
+                        >
+                          <span>Profile</span>
+                        </NavLink>
                       </>
                     )}
 
@@ -407,6 +419,20 @@ const Navbar = () => {
                         >
                           <span>Request Asset</span>
                         </NavLink>
+                        <NavLink
+                          to="/profile"
+                          className={({ isActive, isPending }) =>
+                            `block md:hidden px-2 py-2 hover:bg-neutral-100 transition font-semibold ${
+                              isPending
+                                ? "pending"
+                                : isActive
+                                ? "text-[#35A6DE] border-2 px-2 py-2 rounded-lg border-[#35A6DE]"
+                                : "hover:text-[#2b8cb7]"
+                            }`
+                          }
+                        >
+                          <span>Profile</span>
+                        </NavLink>
                       </>
                     )}
 
@@ -509,6 +535,20 @@ const Navbar = () => {
                           }
                         >
                           <span>Add Employee</span>
+                        </NavLink>
+                        <NavLink
+                          to="/profile"
+                          className={({ isActive, isPending }) =>
+                            `block md:hidden px-2 py-2 hover:bg-neutral-100 transition font-semibold ${
+                              isPending
+                                ? "pending"
+                                : isActive
+                                ? "text-[#35A6DE] border-2 px-2 py-2 rounded-lg border-[#35A6DE]"
+                                : "hover:text-[#2b8cb7]"
+                            }`
+                          }
+                        >
+                          <span>Profile</span>
                         </NavLink>
                       </>
                     )}
