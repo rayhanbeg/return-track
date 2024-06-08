@@ -23,6 +23,7 @@ const AssetsList = () => {
       return data;
     },
   });
+  console.log(assets);
 
   // Mutation to handle asset requests
   const { mutateAsync: requestAsset } = useMutation({
@@ -139,12 +140,14 @@ const AssetsList = () => {
                           <p className='text-gray-900 whitespace-no-wrap'>{asset.type}</p>
                         </td>
                         <td className='px-5 py-5 border-b border-gray-200 text-xs sm:text-sm'>
-                          <p className='text-gray-900 whitespace-no-wrap'>{asset.availability}</p>
+                          <p className='text-gray-900 whitespace-no-wrap'>
+                            {asset.quantity === 0 ? 'Out of stock' : 'Available'}
+                          </p>
                         </td>
                         <td className='px-5 py-5 border-b border-gray-200 text-xs sm:text-sm'>
                           <button
                             onClick={() => setSelectedAsset(asset)}
-                            disabled={asset.availability === 'Out of stock'}
+                            disabled={asset.quantity === 0}
                             className='text-indigo-600 hover:text-indigo-900 disabled:opacity-50'
                           >
                             Request

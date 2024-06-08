@@ -214,18 +214,34 @@ async function run() {
         if (request.status !== "Approved") {
           return res.status(400).send({ message: "Only approved requests can be returned" });
         }
-
+    
+        // Update the request status to "Returned"
         const updateRequestDoc = { $set: { status: "Returned", returnDate: new Date().toISOString() } };
         const requestUpdateResult = await requestCollection.updateOne(requestQuery, updateRequestDoc);
+    
+        // Find the corresponding asset
         const assetQuery = { _id: new ObjectId(request.assetId) };
-        const assetUpdateDoc = { $set: { availability: "Available" } };
+        const asset = await assetCollection.findOne(assetQuery);
+        if (!asset) {
+          return res.status(404).send({ message: "Asset not found" });
+        }
+    
+        // Increment the asset quantity by 1
+        const updatedQuantity = asset.quantity + 1;
+        const assetUpdateDoc = {
+          $set: { 
+            quantity: updatedQuantity,
+            availability: updatedQuantity > 0 ? "Available" : "Out of stock"
+          }
+        };
         const assetUpdateResult = await assetCollection.updateOne(assetQuery, assetUpdateDoc);
-
+    
         res.send({ requestUpdateResult, assetUpdateResult });
       } catch (err) {
         res.status(500).send({ message: "Failed to return asset", error: err });
       }
     });
+    
 
     // Add a new route to update an asset
     app.put("/assets/:id", async (req, res) => {
@@ -372,28 +388,56 @@ app.get("/requests", verifyToken, async (req, res) => {
       }
     });
 
-    // Approve a request
-    app.put("/approveRequest/:id", async (req, res) => {
-      const id = req.params.id;
-      const { approvalDate } = req.body;
-      const approvalData = new Date();
+   // Approve a request
+app.put("/approveRequest/:id", async (req, res) => {
+  const id = req.params.id;
+  const { approvalDate } = req.body;
+  const approvalData = new Date();
 
-      try {
-        const query = { _id: new ObjectId(id) };
-        const updateDoc = {
-          $set: {
-            status: "Approved",
-            approvalDate: approvalData,
-          },
-        };
-        const result = await requestCollection.updateOne(query, updateDoc);
-        res.send(result);
-      } catch (err) {
-        res
-          .status(500)
-          .send({ message: "Failed to approve request", error: err });
-      }
-    });
+  try {
+    const query = { _id: new ObjectId(id) };
+    const updateDoc = {
+      $set: {
+        status: "Approved",
+        approvalDate: approvalData,
+      },
+    };
+
+    const request = await requestCollection.findOne(query);
+
+    if (!request) {
+      return res.status(404).send({ message: "Request not found" });
+    }
+
+    if (request.status !== "Pending") {
+      return res.status(400).send({ message: "Only pending requests can be approved" });
+    }
+
+    // Update the request status to Approved
+    const result = await requestCollection.updateOne(query, updateDoc);
+
+    // Find the corresponding asset
+    const assetQuery = { _id: new ObjectId(request.assetId) };
+    const asset = await assetCollection.findOne(assetQuery);
+
+    if (!asset) {
+      return res.status(404).send({ message: "Asset not found" });
+    }
+
+    // Decrement the asset quantity by 1
+    const updatedQuantity = asset.quantity - 1;
+    if (updatedQuantity < 0) {
+      return res.status(400).send({ message: "Asset quantity cannot be negative" });
+    }
+    const availability = updatedQuantity === 0 ? 'Out of stock' : 'Available'
+    const assetUpdateDoc = { $set: { quantity: updatedQuantity, availability: availability } };
+    const assetResult = await assetCollection.updateOne(assetQuery, assetUpdateDoc);
+
+    res.send({ result, assetResult });
+  } catch (err) {
+    res.status(500).send({ message: "Failed to approve request", error: err });
+  }
+});
 
     // Reject a request
     app.put("/rejectRequest/:id", async (req, res) => {
