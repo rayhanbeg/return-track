@@ -24,14 +24,7 @@ const Navbar = () => {
     setIsOpenModal(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logOut();
-      console.log('User logged out successfully');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
+
 
 
   useEffect(() => {
@@ -325,7 +318,7 @@ const Navbar = () => {
                     {user ? (
                       <>
                         <div
-                          onClick={handleLogout}
+                          onClick={logOut}
                           className="px-4 py-3 hover:bg-neutral-100 transition font-semibold cursor-pointer"
                         >
                           Logout

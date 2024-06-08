@@ -240,24 +240,93 @@ async function run() {
       }
     });
 
-    // Get all user requests
-    app.get("/requests", verifyToken, async (req, res) => {
-      const email = req.query.email;
+// Get all user requests
+app.get("/requests", verifyToken, async (req, res) => {
+  const email = req.query.email;
+
+  if (!email) {
+    return res.status(400).send({ message: "Email is required" });
+  }
+
+  try {
+    const query = { requestedBy: email };
+    const result = await requestCollection.find(query).toArray();
+    res.send(result);
+  } catch (err) {
+    res
+      .status(500)
+      .send({ message: "Failed to fetch requests", error: err });
+  }
+});
+
+
+// get requested data by filter and searching
+    // Get user requests with filtering(user assets)
+    app.get("/requests/filter", async (req, res) => {
+      const { email, search, status, type } = req.query;
+
       if (!email) {
         return res.status(400).send({ message: "Email is required" });
       }
 
+      const query = { requestedBy: email };
+
+      if (search) {
+        query.name = { $regex: search, $options: "i" }; // Case-insensitive regex search
+      }
+
+      if (status) {
+        query.status = status;
+      }
+
+      if (type) {
+        query.type = type;
+      }
+
       try {
-        const query = { requestedBy: email };
-        const result = await requestCollection.find(query).toArray();
-        res.send(result);
+        const requests = await requestCollection.find(query).toArray();
+        res.send(requests);
       } catch (err) {
-        res.status(500).send({ message: "Failed to fetch requests", error: err });
+        res
+          .status(500)
+          .send({ message: "Failed to fetch requests", error: err });
       }
     });
 
+    // filter assets----
+    app.get("/filtered-assets", async (req, res) => {
+      const { search, availability, type } = req.query;
+      const filter = {};
+
+      // Add search query to filter
+      if (search) {
+        filter.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { type: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      // Add availability query to filter
+      if (availability) {
+        filter.availability = availability;
+      }
+
+      // Add type query to filter
+      if (type) {
+        filter.type = type;
+      }
+
+      try {
+        const assets = await assetCollection.find(filter).toArray();
+        res.send(assets);
+      } catch (err) {
+        res.status(500).send({ message: "Failed to fetch assets", error: err });
+      }
+    });
+
+
     // Create an asset
-    app.post("/assets", async (req, res) => {
+    app.post("/asset", async (req, res) => {
       const asset = req.body;
       try {
         const result = await assetCollection.insertOne(asset);
@@ -267,13 +336,14 @@ async function run() {
       }
     });
 
+  
     // Get all assets
-    app.get("/assets", async (req, res) => {
+    app.get('/assets', async (req, res) => {
       try {
         const result = await assetCollection.find().toArray();
         res.send(result);
       } catch (err) {
-        res.status(500).send({ message: "Failed to fetch assets", error: err });
+        res.status(500).send({ message: 'Failed to fetch assets', error: err });
       }
     });
 
@@ -288,6 +358,61 @@ async function run() {
         res.status(500).send({ message: "Failed to delete asset", error: err });
       }
     });
+
+
+     // Get all requests
+     app.get("/allRequests", async (req, res) => {
+      try {
+        const result = await requestCollection.find().toArray();
+        res.send(result);
+      } catch (err) {
+        res
+          .status(500)
+          .send({ message: "Failed to fetch requests", error: err });
+      }
+    });
+
+    // Approve a request
+    app.put("/approveRequest/:id", async (req, res) => {
+      const id = req.params.id;
+      const { approvalDate } = req.body;
+      const approvalData = new Date();
+
+      try {
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "Approved",
+            approvalDate: approvalData,
+          },
+        };
+        const result = await requestCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch (err) {
+        res
+          .status(500)
+          .send({ message: "Failed to approve request", error: err });
+      }
+    });
+
+    // Reject a request
+    app.put("/rejectRequest/:id", async (req, res) => {
+      const id = req.params.id;
+
+      try {
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: { status: "Rejected" },
+        };
+        const result = await requestCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch (err) {
+        res
+          .status(500)
+          .send({ message: "Failed to reject request", error: err });
+      }
+    });
+
 
     // Create an employer
     app.post("/employers", async (req, res) => {
