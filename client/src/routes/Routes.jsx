@@ -9,7 +9,6 @@ import PrivateRoute from './PrivateRoute'
 import Statics from '../pages/Dashboard/Common/Statics'
 import MyListings from '../pages/Dashboard/Manager/MyEmployeeList'
 import Profile from '../pages/Dashboard/Common/Profile'
-import ManageUsers from '../pages/Dashboard/Admin/ManageUser'
 import JoinManager from '../pages/SignUp/JoinManager'
 import AddAsset from '../pages/Dashboard/Manager/AddAsset'
 import MyEmployeeList from '../pages/Dashboard/Manager/MyEmployeeList'
@@ -17,6 +16,8 @@ import AssetsList from '../pages/Dashboard/Employee/AssetsList'
 import MyAssets from '../pages/Dashboard/Employee/MyAssets'
 import ManagerAssetsList from '../pages/Dashboard/Manager/ManagerAssetsList'
 import AllRequests from '../pages/Dashboard/Manager/AllRequests'
+import AddEmployees from '../pages/Dashboard/Manager/AddEmployee'
+import MyTeamPage from '../pages/Dashboard/Employee/MyTeamPage'
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +62,14 @@ export const router = createBrowserRouter([
       {
         path: '/all-requests',
         element: <AllRequests/>
+      },
+      {
+        path: '/my-team',
+        element: <MyTeamPage/>
+      },
+      {
+        path: '/add-employee',
+        element: <AddEmployees/>
       },
       
       { path: '/join-employ', element: <JoinEmployer /> },

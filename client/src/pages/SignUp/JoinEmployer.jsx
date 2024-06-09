@@ -16,27 +16,13 @@ const JoinEmployer = () => {
     const form = e.target;
     const name = form.name.value;
     const email = form.email.value;
+    const company = null;
     const birth = form.birth.value;
     const password = form.password.value;
     const image = form.image.files[0];
     const formData = new FormData();
     formData.append("image", image);
-
-    const addInfo = {
-      name,
-      email,
-      birth,
-      password,
-    };
-
-    try {
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/employee`, addInfo);
-      console.log(data);
-      // navigate("/myFood");
-    } catch (err) {
-      console.log(err);
-    }
-
+  
     try {
       setLoading(true);
       // Upload image and get image URL
@@ -45,26 +31,41 @@ const JoinEmployer = () => {
         formData
       );
       console.log(data);
-
+  
       // User SignUp
       const result = await createUser(email, password);
       console.log(result);
-
+  
       // Save username and photo in Firebase
       await updateUserProfile(name, data.data.display_url);
-
+  
       // Save user role and status
       await saveUser({ email });
-
+  
+      // Add imageUrl to addInfo object
+      const addInfo = {
+        name,
+        email,
+        company,
+        birth,
+        password,
+        imageUrl: data.data.display_url, // Added imageUrl here
+      };
+  
+      // Make API call to save additional info
+      const addInfoResponse = await axios.post(`${import.meta.env.VITE_API_URL}/employee`, addInfo);
+      console.log(addInfoResponse.data);
+  
       navigate(from);
       toast.success('SignUp Successful');
-
+  
     } catch (error) {
       console.log(error);
       toast.error(error.message);
       setLoading(false);
     }
   };
+  
 
   const handleGoogleSignIn = async () => {
     try {

@@ -61,7 +61,7 @@ const JoinManager = () => {
       console.log(result);
 
       // Save username and photo in Firebase
-      await updateUserProfile(name, data.data.display_url);
+      await updateUserProfile(name, data.data.display_url, companyName);
 
       // Save user role and status
       await saveUser({ email });
